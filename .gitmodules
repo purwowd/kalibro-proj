@@ -1,0 +1,6 @@
+[submodule "src/base/gr-gsm"]
+	path = src/base/gr-gsm
+	url = https://github.com/purwowd/gr-gsm
+[submodule "src/base/bladeRF"]
+	path = src/base/bladeRF
+	url = https://github.com/Nuand/bladeRF
