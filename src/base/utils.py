@@ -30,6 +30,7 @@ class tracker:
     show_all_tmsi = False
     mcc_codes = None
     sqlcon = None
+    textfile = None
 
     output_function = None
 
@@ -125,6 +126,12 @@ class tracker:
         self.sqlcon = sqlite3.connect(filename)
         self.sqlcon.execute("CREATE TABLE IF NOT EXISTS observations(stamp datetime, tmsi1 text, tmsi2 text, imsi text, imsicountry text, imsibrand text, imsioperator text, mcc integer, mnc integer, lac integer, cell integer);")
 
+    def textfile(self, filename):
+        txt = open(filename, "w")
+        txt.write("[START]\n")
+        txt.close()
+        self.textfile = filename
+
     def output(self, cpt, tmsi1, tmsi2, imsi, imsicountry, imsibrand, imsioperator, mcc, mnc, lac, cell, now, packet=None):
         print("{:7s} ; {:10s} ; {:10s} ; {:17s} ; {:12s} ; {:10s} ; {:21s} ; {:4s} ; {:5s} ; {:6s} ; {:6s} ; {:s}".format(str(cpt), tmsi1, tmsi2, imsi, imsicountry, imsibrand, imsioperator, str(mcc), str(mnc), str(lac), str(cell), now.isoformat()))
 
@@ -145,6 +152,12 @@ class tracker:
                 tmsi2 = None
             self.sqlcon.execute(u"INSERT INTO observations (stamp, tmsi1, tmsi2, imsi, imsicountry, imsibrand, imsioperator, mcc, mnc, lac, cell) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", (now, tmsi1, tmsi2, imsi, imsicountry, imsibrand, imsioperator, mcc, mnc, lac, cell))
             self.sqlcon.commit()
+
+        if self.textfile:
+            now = datetime.datetime.now()
+            txt = open(self.textfile, 'a')
+            txt.write(str(now) + ", " + tmsi1 + ", " + tmsi2 + ", " + imsi + ", " + imsicountry + ", " + imsibrand + ", " + imsioperator + ", " + mcc + ", " + mnc + ", " + lac + ", " + cell + "\n")
+            txt.close()
 
     def header(self):
         print("{:7s} ; {:10s} ; {:10s} ; {:17s} ; {:12s} ; {:10s} ; {:21s} ; {:4s} ; {:5s} ; {:6s} ; {:6s} ; {:s}".format("Nb IMSI", "TMSI-1", "TMSI-2", "IMSI", "country", "brand", "operator", "MCC", "MNC", "LAC", "CellId", "Timestamp"))
@@ -359,10 +372,14 @@ if __name__ == "__main__":
     parser.add_option("-p", "--port", dest="port", default="4729", type="int", help="Port (default : 4729)")
     parser.add_option("-s", "--sniff", action="store_true", dest="sniff", help="sniff on interface instead of listening on port (require root/suid access)")
     parser.add_option("-w", "--sqlite", dest="sqlite", default=None, type="string", help="Save observed IMSI values to specified SQLite file")
+    parser.add_option("-t", "--txt", dest="txt", default=None, type="string", help="Save observed IMSI values to specified TXT file")
     (options, args) = parser.parse_args()
 
     if options.sqlite:
         imsitracker.sqlite_file(options.sqlite)
+
+    if options.txt:
+        imsitracker.textfile(options.txt)
 
     imsitracker.show_all_tmsi = options.show_all_tmsi
     imsi_to_track = ""
