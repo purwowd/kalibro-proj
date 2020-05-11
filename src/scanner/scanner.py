@@ -24,7 +24,7 @@ def main():
                 if (col[0].strip() == "Freq"):
                     p = subprocess.Popen("grgsm_livemon_headless --args=" + radio + " -f " + col[1].strip() + " > /dev/null 2>&1", shell=True)
                     print("Sniffing " + col[1].strip() + "...")
-                    x = subprocess.Popen("sudo python3 imsibro.py --sniff -t sniff-" + col[1].strip() + ".txt", shell=True)
+                    x = subprocess.Popen("sudo python3 utils.py --sniff -t sniff-" + col[1].strip() + ".txt", shell=True)
                     time.sleep(20)
                     kill(p.pid)
                     kill(x.pid)

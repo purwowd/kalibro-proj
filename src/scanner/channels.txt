@@ -1,0 +1,5 @@
+ARFCN:   78, Freq:  950.6M, CID:     0, LAC:     0, MCC:   0, MNC:   0, Pwr: -36
+ARFCN:    9, Freq:  936.8M, CID:     0, LAC:   171, MCC: 510, MNC:  10, Pwr: -32
+ARFCN:   84, Freq:  951.8M, CID: 17411, LAC: 39088, MCC: 510, MNC:   1, Pwr: -33
+ARFCN:   88, Freq:  952.6M, CID: 17412, LAC: 39088, MCC: 510, MNC:   1, Pwr: -35
+ARFCN:   96, Freq:  954.2M, CID:     0, LAC: 24300, MCC: 510, MNC:  11, Pwr: -54
