@@ -1,5 +1,6 @@
 from optparse import OptionParser
 from scapy.all import sniff, UDP
+
 import ctypes
 import json
 import datetime
@@ -7,9 +8,11 @@ import io
 import socket
 import sqlite3
 import pymysql
+import MySQLdb as mdb
 
-con = pymysql.connect('localhost', 'root', 'toor', 'demo')
+con = mdb.connect('localhost', 'root', 'toor', 'demo')
 cur = con.cursor()
+
 imsitracker = None
 
 
@@ -124,6 +127,15 @@ class tracker:
         self.sqlcon = sqlite3.connect(filename)
         self.sqlcon.execute("CREATE TABLE IF NOT EXISTS observations(stamp datetime, tmsi1 text, tmsi2 text, imsi text, imsicountry text, imsibrand text, imsioperator text, mcc integer, mnc integer, lac integer, cell integer);")
 
+    def mysql_file(self):
+        self.db = con.cursor()
+
+        if self.db:
+
+            print("Check mysql connection => [successful]")
+        else:
+            print("Check mysql connection => [unsuccessful]")
+
     def output(self, cpt, tmsi1, tmsi2, imsi, imsicountry, imsibrand, imsioperator, mcc, mnc, lac, cell, now, packet=None):
         print("{:7s} ; {:10s} ; {:10s} ; {:17s} ; {:12s} ; {:10s} ; {:21s} ; {:4s} ; {:5s} ; {:6s} ; {:6s} ; {:s}".format(str(cpt), tmsi1, tmsi2, imsi, imsicountry, imsibrand, imsioperator, str(mcc), str(mnc), str(lac), str(cell), now.isoformat()))
 
@@ -144,6 +156,23 @@ class tracker:
                 tmsi2 = None
             self.sqlcon.execute(u"INSERT INTO observations (stamp, tmsi1, tmsi2, imsi, imsicountry, imsibrand, imsioperator, mcc, mnc, lac, cell) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", (now, tmsi1, tmsi2, imsi, imsicountry, imsibrand, imsioperator, mcc, mnc, lac, cell))
             self.sqlcon.commit()
+
+        self.db = con.cursor()
+        if self.db:
+            result = "ready."
+            print("Check mysql connection again => Cool! mysql is " + result)
+            print("Saving data to db...")
+            if tmsi1 == "":
+                tmsi1 = None
+            if tmsi2 == "":
+                tmsi2 = None
+            query = ("INSERT INTO `imsi` (`tmsi1`, `tmsi2`, `imsi`,`mcc`, `mnc`, `lac`, `cell_id`, `stamp`, `deviceid`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)")
+            arg = (tmsi1, tmsi2, imsi, mcc, mnc, lac, cell, now, "bladerf0")
+            cur.execute(query, arg)
+            con.commit()
+        else:
+            result = "unsuccessful"
+            print(result + " => Check your db connection.")
 
     def header(self):
         print("{:7s} ; {:10s} ; {:10s} ; {:17s} ; {:12s} ; {:10s} ; {:21s} ; {:4s} ; {:5s} ; {:6s} ; {:6s} ; {:s}".format("Nb IMSI", "TMSI-1", "TMSI-2", "IMSI", "country", "brand", "operator", "MCC", "MNC", "LAC", "CellId", "Timestamp"))
@@ -192,10 +221,8 @@ class tracker:
 
         if do_print:
             if imsi1:
-                # Query in here...
                 self.pfields(str(n), tmsi1, tmsi2, imsi1, str(self.mcc), str(self.mnc), str(self.lac), str(self.cell), p)
             if imsi2:
-                # Query in here...
                 self.pfields(str(n), tmsi1, tmsi2, imsi2, str(self.mcc), str(self.mnc), str(self.lac), str(self.cell), p)
 
         if not imsi1 and not imsi2:
@@ -362,10 +389,14 @@ if __name__ == "__main__":
     parser.add_option("-p", "--port", dest="port", default="4729", type="int", help="Port (default : 4729)")
     parser.add_option("-s", "--sniff", action="store_true", dest="sniff", help="sniff on interface instead of listening on port (require root/suid access)")
     parser.add_option("-w", "--sqlite", dest="sqlite", default=None, type="string", help="Save observed IMSI values to specified SQLite file")
+    parser.add_option("-x", "--mysql", action="store_true", dest="mysql", help="tulung")
     (options, args) = parser.parse_args()
 
     if options.sqlite:
         imsitracker.sqlite_file(options.sqlite)
+
+    if options.mysql:
+        imsitracker.mysql_file()
 
     imsitracker.show_all_tmsi = options.show_all_tmsi
     imsi_to_track = ""
