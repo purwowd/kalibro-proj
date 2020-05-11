@@ -1,0 +1,1 @@
+ARFCN:   78, Freq:  950.6M, CID:     0, LAC:     0, MCC:   0, MNC:   0, Pwr: -36
