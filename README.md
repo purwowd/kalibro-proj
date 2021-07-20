@@ -1,4 +1,4 @@
-# kalibro-proj
+# kalibro
 
 ### How to run:
 - catcher:
